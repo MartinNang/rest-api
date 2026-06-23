@@ -1,9 +1,11 @@
 package org.pytch.backend.controller;
 
 import jakarta.validation.Valid;
-import org.pytch.backend.entity.PytchUser;
+import org.pytch.backend.dto.request.PytchUserDto;
+import org.pytch.backend.model.PytchUser;
 import org.pytch.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,9 +18,9 @@ public class UserController {
 
     @PostMapping("/users")
     public PytchUser saveUser(
-            @Valid @RequestBody PytchUser pytchUser)
+            @Valid @RequestBody PytchUserDto pytchUserDto)
     {
-        return userService.saveUser(pytchUser);
+        return userService.saveUser(new PytchUser(pytchUserDto));
     }
 
     @GetMapping("/users")
@@ -38,5 +40,18 @@ public class UserController {
     public String deleteUserById(@PathVariable("id") Long userId)
     {
         return "Deleted successfully";
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestBody PytchUserDto pytchUserDto)
+    {
+        return "not implemented";
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody PytchUserDto pytchUserDto) {
+        String res = userService.registerUser(pytchUserDto);
+
+        return ResponseEntity.ok(res);
     }
 }
