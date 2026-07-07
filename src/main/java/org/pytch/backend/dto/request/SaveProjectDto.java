@@ -5,9 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import org.pytch.backend.PytchProgramKind;
 import org.pytch.backend.PytchProjectStatus;
-import org.pytch.backend.model.PytchUser;
-
-import java.io.File;
 
 @Data
 @Builder
@@ -20,8 +17,5 @@ public class SaveProjectDto {
 
     private PytchProjectStatus status;
 
-    private PytchUser user;
-
-    private File projectFile;
-
+    private PytchUserDto userDto;
 }
