@@ -1,12 +1,15 @@
 package org.pytch.backend.service.impl;
 
 import org.pytch.backend.dto.request.PytchUserDto;
+import org.pytch.backend.model.Project;
 import org.pytch.backend.model.PytchUser;
+import org.pytch.backend.repository.ProjectRepository;
 import org.pytch.backend.repository.UserRepository;
 import org.pytch.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +20,12 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ProjectRepository projectRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public PytchUser saveUser(PytchUser pytchUser) {
@@ -31,6 +40,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public PytchUser findUserById(Long id) {
         return  userRepository.findById(id).get();
+    }
+
+    @Override
+    public PytchUser findUserByEmail(String email) {
+        return userRepository.findPytchUserByEmail(email).get();
     }
 
     @Override
@@ -79,6 +93,8 @@ public class UserServiceImpl implements UserService {
         }
 
         PytchUser newUser = new PytchUser(pytchUserDto);
+
+        newUser.setPassword(passwordEncoder.encode(pytchUserDto.getPassword()));
 
         userRepository.save(newUser);
 

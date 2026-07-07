@@ -3,6 +3,8 @@ package org.pytch.backend.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.pytch.backend.dto.request.PytchUserDto;
+import org.pytch.backend.service.ProjectService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -18,8 +20,10 @@ public class PytchUser implements UserDetails {
     @GeneratedValue
     private Long id;
 
+    @Column(unique = true)
     private String username;
 
+    @Column(unique = true)
     private String email;
 
     private String password;
@@ -42,7 +46,6 @@ public class PytchUser implements UserDetails {
     public PytchUser(PytchUserDto pytchUserDto) {
         this.username = pytchUserDto.getUsername();
         this.email = pytchUserDto.getEmail();
-        this.password = pytchUserDto.getPassword();
         this.createdAt = new Timestamp(System.currentTimeMillis());
         this.authorities = new HashSet<>();
     }

@@ -38,10 +38,10 @@ public class Project {
 
     private Timestamp updatedAt;
 
-    public Project(SaveProjectDto saveProjectDto) {
+    public Project(SaveProjectDto saveProjectDto, PytchUser user) {
         this.title = saveProjectDto.getTitle();
         this.programKind = saveProjectDto.getProgramKind();
         this.status = saveProjectDto.getStatus();
-        this.user = saveProjectDto.getUser();
+        this.user = user;
     }
 }
