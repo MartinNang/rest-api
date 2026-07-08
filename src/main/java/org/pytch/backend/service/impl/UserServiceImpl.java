@@ -7,49 +7,53 @@ import org.pytch.backend.repository.ProjectRepository;
 import org.pytch.backend.repository.UserRepository;
 import org.pytch.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository repository;
+    private final PasswordEncoder encoder;
 
     @Autowired
-    private ProjectRepository projectRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public UserServiceImpl(UserRepository repository, @Lazy PasswordEncoder encoder) {
+        this.repository = repository;
+        this.encoder = encoder;
+    }
 
     @Override
     public PytchUser saveUser(PytchUser pytchUser) {
-        return userRepository.save(pytchUser);
+        return repository.save(pytchUser);
     }
 
     @Override
     public List<PytchUser> getUsers() {
-        return (List<PytchUser>) userRepository.findAll();
+        return (List<PytchUser>) repository.findAll();
     }
 
     @Override
     public PytchUser findUserById(Long id) {
-        return  userRepository.findById(id).get();
+        return  repository.findById(id).get();
     }
 
     @Override
-    public PytchUser findUserByEmail(String email) {
-        return userRepository.findPytchUserByEmail(email).get();
+    public PytchUser findUserByUsername(String username) {
+        return repository.findPytchUserByUsername(username).get();
     }
 
     @Override
     public PytchUser updateUser(PytchUser pytchUser, Long userId) {
-        PytchUser pytchUserDb = userRepository.findById(userId).get();
+        PytchUser pytchUserDb = repository.findById(userId).get();
 
         String name = pytchUser.getUsername();
         if(name != null && name.isEmpty()) {
@@ -66,27 +70,30 @@ public class UserServiceImpl implements UserService {
             pytchUserDb.setPassword(password);
         }
 
-        return userRepository.save(pytchUserDb);
+        return repository.save(pytchUserDb);
     }
 
     @Override
     public void deleteUserById(Long userId) {
-        userRepository.deleteById(userId);
+        repository.deleteById(userId);
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<PytchUser> user = this.userRepository.findPytchUserByEmail(username);
+        Optional<PytchUser> user = this.repository.findPytchUserByUsername(username);
         if (user.isEmpty()) {
             throw new UsernameNotFoundException("User not found");
         }
-
-        return user.get();
+        PytchUser u = user.get();
+        return User.withUsername(u.getUsername())
+                .password(u.getPassword())
+                .authorities(u.getAuthorities())
+                .build();
     }
 
     @Override
     public String registerUser(PytchUserDto pytchUserDto) {
-        PytchUser existingUser = userRepository.findPytchUserByEmail(pytchUserDto.getEmail()).orElse(null);
+        PytchUser existingUser = repository.findPytchUserByEmail(pytchUserDto.getEmail()).orElse(null);
 
         if (existingUser != null) {
             return "user already exists";
@@ -94,9 +101,11 @@ public class UserServiceImpl implements UserService {
 
         PytchUser newUser = new PytchUser(pytchUserDto);
 
-        newUser.setPassword(passwordEncoder.encode(pytchUserDto.getPassword()));
+        newUser.setPassword(encoder.encode(pytchUserDto.getPassword()));
 
-        userRepository.save(newUser);
+        newUser.setCreatedAt(Timestamp.from(Instant.now()));
+
+        repository.save(newUser);
 
         return "registration successful";
     }
