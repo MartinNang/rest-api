@@ -1,7 +1,6 @@
 package org.pytch.backend.service;
 
 import org.pytch.backend.dto.request.PytchUserDto;
-import org.pytch.backend.model.Project;
 import org.pytch.backend.model.PytchUser;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
@@ -15,7 +14,7 @@ public interface UserService extends UserDetailsService {
 
     PytchUser findUserById(Long id);
 
-    PytchUser findUserByEmail(String email);
+    PytchUser findUserByUsername(String username);
 
     PytchUser updateUser(PytchUser pytchUser, Long userId);
     

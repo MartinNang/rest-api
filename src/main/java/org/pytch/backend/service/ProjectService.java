@@ -1,5 +1,6 @@
 package org.pytch.backend.service;
 
+import org.pytch.backend.dto.request.PytchUserDto;
 import org.pytch.backend.dto.request.SaveProjectDto;
 import org.pytch.backend.model.Project;
 import org.pytch.backend.model.PytchUser;
@@ -19,7 +20,13 @@ public interface ProjectService {
 
     public Path getFileStoragePath();
 
-    public Path getUserStoragePath(SaveProjectDto projectDto);
+    public Path getUserStoragePath(PytchUser user);
 
-    List<Project> findProjectsByUserId(PytchUser pytchUser, Long userId);
+    List<Project> findProjectsByUserId(Long userId);
+
+    List<Project> findListedProjectsByUserId(Long userId);
+
+    Project findProjectById(Long projectId, PytchUser pytchUser) throws Exception;
+
+    Project downloadProjectById(Long projectId, PytchUser userByUsername) throws Exception;
 }

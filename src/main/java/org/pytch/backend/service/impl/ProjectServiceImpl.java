@@ -3,10 +3,11 @@ package org.pytch.backend.service.impl;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import org.pytch.backend.PytchProgramKind;
-import org.pytch.backend.dto.request.SaveProjectDto;
+import org.pytch.backend.PytchProjectStatus;
 import org.pytch.backend.model.Project;
 import org.pytch.backend.model.PytchUser;
 import org.pytch.backend.repository.ProjectRepository;
+import org.pytch.backend.repository.UserRepository;
 import org.pytch.backend.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -30,6 +32,8 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Getter
     private Path fileStoragePath;
+    @Autowired
+    private UserRepository userRepository;
 
     @PostConstruct
     public void init() {
@@ -44,6 +48,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public Project saveProject(Project project) {
+        if (project.getCreatedAt() == null) {
+            project.setCreatedAt(Timestamp.from(Instant.now()));
+        }
+        project.setUpdatedAt(Timestamp.from(Instant.now()));
         return projectRepository.save(project);
     }
 
@@ -90,12 +98,67 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public Path getUserStoragePath(SaveProjectDto projectDto) {
-        return fileStoragePath.resolve(projectDto.getUserDto().getUsername());
+    public Path getUserStoragePath(PytchUser user) {
+        return fileStoragePath.resolve(user.getUsername());
     }
 
     @Override
-    public List<Project> findProjectsByUserId(PytchUser pytchUser, Long userId) {
+    public List<Project> findProjectsByUserId(Long userId) {
         return projectRepository.findProjectsByUser_Id(userId);
+    }
+
+    @Override
+    public List<Project> findListedProjectsByUserId(Long userId) {
+        return projectRepository.findProjectsByStatusAndUser_Id(PytchProjectStatus.listed, userId);
+    }
+
+    @Override
+    public Project findProjectById(Long projectId, PytchUser user) throws Exception {
+        // retrieve project
+        Project project = projectRepository.findProjectByIdIs(projectId);
+
+        // check if project is unlisted
+        if (project != null) {
+            // TODO: always add status
+            if (project.getStatus() == PytchProjectStatus.listed || project.getStatus() == null) {
+                return project;
+            }
+
+            if (project.getStatus() == PytchProjectStatus.unlisted) {
+                if (user.getId().equals(project.getUser().getId())) {
+                    return project;
+                }
+                else {
+                    throw new Exception("Project not found");
+                }
+            }
+        }
+
+        throw new Exception("Project not found");
+    }
+
+    @Override
+    public Project downloadProjectById(Long projectId, PytchUser user) throws Exception {
+        // retrieve project
+        Project project = projectRepository.findProjectByIdIs(projectId);
+
+        // check if project is unlisted
+        if (project != null) {
+            // TODO: always add status
+            if (project.getStatus() == PytchProjectStatus.listed || project.getStatus() == null) {
+                return project;
+            }
+
+            if (project.getStatus() == PytchProjectStatus.unlisted) {
+                if (user.getId().equals(project.getUser().getId())) {
+                    return project;
+                }
+                else {
+                    throw new Exception("Project not found");
+                }
+            }
+        }
+
+        throw new Exception("Project not found");
     }
 }
